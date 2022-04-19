@@ -12,8 +12,9 @@ st.set_page_config(layout="wide")
 st.title("Apartment Rental Price Prediction")
 
 
+@st.cache
 def load_prediction_locations(location: str):
-    data_location = f"./data/processed/{location.lower()}_prediction_location.csv"
+    data_location = f"./data/processed/{location.lower()}_prediction_location copy.csv"
     locations = pd.read_csv(data_location)
     return locations
 
@@ -25,16 +26,15 @@ def load_geojson(location: str):
     return geojson
 
 
-def plot_results(locations, geojson, dist_transit):
+def plot_results(df, geojson, max_dist_transit):
     # Get median for each neighborhood
     nhood_rent = (
-        locations[locations.dist_transit < dist_transit]
+        df[df.dist_transit < max_dist_transit]
         .groupby(["neighborhood"], as_index=False)["Rent"]
         .median()
     )
     nhood_rent.Rent = nhood_rent.Rent.astype(int)
     nhood_rent = nhood_rent[nhood_rent["neighborhood"].str.strip().astype(bool)]
-    nhood_rent.head()
 
     # Set map center
     downtown_seattle = {"lat": 47.604013, "lon": -122.335167}
@@ -56,44 +56,12 @@ def plot_results(locations, geojson, dist_transit):
     st.plotly_chart(fig, use_container_width=True)
 
 
-# user_inputs = UserInputs(
-#     beds=st.sidebar.number_input("Beds", 0, 4, 1),
-#     baths=st.sidebar.number_input("Baths", 0, 4, 1),
-#     sqft=st.sidebar.slider("Square Feet", 50, 2000, 500),
-#     fitness_center=1,
-#     air_conditioning=1,
-#     in_unit_washer_dryer=1,
-#     laundry_facilities=1,
-#     roof=1,
-#     concierge=1,
-#     garage=1,
-#     pets_allowed=1,
-# )
-
-
-# user_inputs = {
-#     "beds": user_inputs.beds,
-#     "baths": user_inputs.baths,
-#     "sqft": np.log(user_inputs.sqft),
-#     "fitness_center": 0.0,
-#     "air_conditioning": 0.0,
-#     "in_unit_washer_dryer": 1.0,
-#     "laundry_facilities": 0.0,
-#     "roof": 0.0,
-#     "concierge": 0.0,
-#     "garage": 1.0,
-#     "pets_allowed": 1.0,
-# }
-
-# locations["Rent"] = make_predictions(model, locations)
-
-
 def main():
     # Setup sidebar for user inputs
     with st.sidebar:
-        beds = st.number_input("Beds", 0, 4, 1)
-        baths = st.number_input("Baths", 0, 4, 1)
-        sqft = st.slider("Square Feet", 50, 2000, 500)
+        beds = st.number_input("Beds", 0, 3, 1)
+        baths = st.number_input("Baths", 0, 3, 1)
+        sqft = st.slider("Square Feet", 50, 2000, 500, 5)
         transit_distance = st.slider(
             "Max Distance to Transit (miles)", 0.00, 1.00, 0.50
         )
@@ -104,8 +72,10 @@ def main():
                 "Air Conditioning",
                 "Washer/Dryer",
                 "Laundry Facilities",
+                "Dishwasher",
                 "Rooftop",
                 "Concierge",
+                "Pool",
                 "Parking Garage",
                 "Pets Allowed",
             ],
@@ -117,11 +87,19 @@ def main():
     model = load_model("seattle")
 
     # Get predictions
-    rent = Prediction(beds=beds, baths=baths, sqft=sqft, amenities=amenities)
-    locations["Rent"] = rent.get_predictions(model, locations)
-
+    predictor = Prediction(
+        beds=beds, baths=baths, sqft=np.log(sqft), amenities=amenities
+    )
+    predictions = predictor.get_predictions(model, locations)
+    results = pd.DataFrame(
+        {
+            "neighborhood": locations.neighborhood,
+            "Rent": predictions,
+            "dist_transit": locations.loc[:, "dist_transit"],
+        }
+    )
     # Plot results
-    plot_results(locations, geojson, transit_distance)
+    plot_results(results, geojson, transit_distance)
 
 
 if __name__ == "__main__":
