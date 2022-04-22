@@ -7,15 +7,15 @@ import streamlit as st
 
 def load_model(location: str):
     # Load the xbg and rf models
-    with open(f"./models/{location}_rent_prediction.pickle", "rb") as handle:
+    with open(
+        f"./{location.lower()}/models/{location.lower()}_rent_prediction.pickle", "rb"
+    ) as handle:
         xgb = pkl.load(handle)
     return xgb
 
 
 class Prediction:
     def __init__(self, beds: int, baths: int, sqft: int, amenities: list):
-        # self.beds = beds
-        # self.baths = baths
         self.beds_times_baths = beds * baths
         self.sqft = sqft
         self.fitness_center = 1 if "Fitness Center" in amenities else 0
@@ -29,28 +29,6 @@ class Prediction:
 
     def get_predictions(self, model, locations):
         prediction_locations = locations.copy()
-
-        # column_order = [
-        #     "beds",
-        #     "baths",
-        #     "sqft",
-        #     "fitness_center",
-        #     "air_conditioning",
-        #     "in_unit_washer_dryer",
-        #     "laundry_facilities",
-        #     "roof",
-        #     "concierge",
-        #     "garage",
-        #     "dist_seattle",
-        #     "dist_transit",
-        #     "pets_allowed",
-        #     "cluster_id_0.0",
-        #     "cluster_id_1.0",
-        #     "cluster_id_2.0",
-        #     "cluster_id_3.0",
-        #     "cluster_id_4.0",
-        #     "cluster_id_5.0",
-        # ]
 
         column_order = [
             "sqft",

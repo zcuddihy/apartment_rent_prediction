@@ -14,7 +14,7 @@ st.title("Apartment Rental Price Prediction")
 
 @st.cache
 def load_prediction_locations(location: str):
-    data_location = f"./data/processed/{location.lower()}_prediction_location copy.csv"
+    data_location = f"./{location}/models/{location.lower().replace(' ','_')}_prediction_location.csv"
     locations = pd.read_csv(data_location)
     return locations
 
@@ -88,7 +88,7 @@ def main():
             submit = st.form_submit_button("Get Predictions")
 
     # Setup data for model
-    locations = load_prediction_locations("seattle")
+    location = load_prediction_locations("seattle")
     geojson = load_geojson("seattle")
     model = load_model("seattle")
 
@@ -96,12 +96,12 @@ def main():
     predictor = Prediction(
         beds=beds, baths=baths, sqft=np.log(sqft), amenities=amenities
     )
-    predictions = predictor.get_predictions(model, locations)
+    predictions = predictor.get_predictions(model, location)
     results = pd.DataFrame(
         {
-            "neighborhood": locations.neighborhood,
+            "neighborhood": location.neighborhood,
             "Rent": predictions,
-            "dist_transit": locations.loc[:, "dist_transit"],
+            "dist_transit": location.loc[:, "dist_transit"],
         }
     )
     # Plot results
