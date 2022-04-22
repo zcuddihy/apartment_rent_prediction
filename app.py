@@ -58,28 +58,34 @@ def plot_results(df, geojson, max_dist_transit):
 
 def main():
     # Setup sidebar for user inputs
-    with st.sidebar:
-        beds = st.number_input("Beds", 0, 3, 1)
-        baths = st.number_input("Baths", 0, 3, 1)
-        sqft = st.slider("Square Feet", 50, 2000, 500, 5)
-        transit_distance = st.slider(
-            "Max Distance to Transit (miles)", 0.00, 1.00, 0.50
-        )
-        amenities = st.multiselect(
-            "Select additional amenities",
-            [
-                "Fitness Center",
-                "Air Conditioning",
-                "Washer/Dryer",
-                "Laundry Facilities",
-                "Dishwasher",
-                "Rooftop",
-                "Concierge",
-                "Pool",
-                "Parking Garage",
-                "Pets Allowed",
-            ],
-        )
+    with st.form(key="Form1"):
+        with st.sidebar:
+            location = st.selectbox(
+                "Select the location",
+                ("Seattle", "Bay Area", "Chicago", "New York City"),
+            )
+            beds = st.number_input("Beds", 0, 3, 1)
+            baths = st.number_input("Baths", 0, 3, 1)
+            sqft = st.slider("Square Feet", 200, 1500, 500, 10)
+            transit_distance = st.slider(
+                "Max Distance to Transit (miles)", 0.00, 1.00, 0.50
+            )
+            amenities = st.multiselect(
+                "Select additional amenities",
+                [
+                    "Fitness Center",
+                    "Air Conditioning",
+                    "Washer/Dryer",
+                    "Laundry Facilities",
+                    "Dishwasher",
+                    "Rooftop",
+                    "Concierge",
+                    "Pool",
+                    "Parking Garage",
+                    "Pets Allowed",
+                ],
+            )
+            submit = st.form_submit_button("Get Predictions")
 
     # Setup data for model
     locations = load_prediction_locations("seattle")
