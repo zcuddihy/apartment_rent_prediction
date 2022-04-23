@@ -1,14 +1,14 @@
-import pandas as pd
 import numpy as np
 import pickle as pkl
-from dataclasses import dataclass, fields
 import streamlit as st
+from .settings import column_orders
 
 
 def load_model(location: str):
     # Load the xbg and rf models
     with open(
-        f"./{location.lower()}/models/{location.lower()}_rent_prediction.pickle", "rb"
+        f"./{location.lower().replace(' ', '_')}/models/{location.lower().replace(' ', '_')}_rent_prediction.pickle",
+        "rb",
     ) as handle:
         xgb = pkl.load(handle)
     return xgb
@@ -26,28 +26,17 @@ class Prediction:
         self.concierge = 1 if "Concierge" in amenities else 0
         self.garage = 1 if "Parking Garage" in amenities else 0
         self.pets_allowed = 1 if "Pets Allowed" in amenities else 0
+        self.pool = 1 if "Pool" in amenities else 0
+        self.elevator = 1 if "Elevator" in amenities else 0
+        self.dishwasher = 1 if "Dishwasher" in amenities else 0
 
-    def get_predictions(self, model, locations):
-        prediction_locations = locations.copy()
+    def get_predictions(self, model, prediction_points, location):
+        df = prediction_points.copy()
 
-        column_order = [
-            "sqft",
-            "fitness_center",
-            "air_conditioning",
-            "in_unit_washer_dryer",
-            "laundry_facilities",
-            "roof",
-            "concierge",
-            "garage",
-            "dist_seattle",
-            "dist_transit",
-            "cluster_rent_per_sqft",
-            "beds_times_baths",
-            "pets_allowed",
-        ]
+        column_order = column_orders[location]
 
-        prediction_locations = prediction_locations.assign(**vars(self))
-        X = prediction_locations[column_order]
+        df = df.assign(**vars(self))
+        X = df[column_order]
         predictions = np.exp(model.predict(X)).astype(int)
 
         return predictions

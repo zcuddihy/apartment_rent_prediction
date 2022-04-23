@@ -4,29 +4,29 @@ import numpy as np
 import streamlit as st
 import plotly.express as px
 import json
-import pickle as pkl
-from xgboost import XGBRegressor
 from src.predictions import load_model, Prediction
+from src.settings import location_centroid
 
 st.set_page_config(layout="wide")
-st.title("Apartment Rental Price Prediction")
+st.title("Apartment Rental Price Estimation")
 
 
 @st.cache
-def load_prediction_locations(location: str):
-    data_location = f"./{location}/models/{location.lower().replace(' ','_')}_prediction_location.csv"
+def load_prediction_points(location: str):
+    data_location = f"./{location.lower().replace(' ','_')}/models/{location.lower().replace(' ','_')}_prediction_location.csv"
     locations = pd.read_csv(data_location)
     return locations
 
 
-@st.cache
 def load_geojson(location: str):
-    with open(f"./data/geojson_files/{location}-neighborhoods.geojson") as f:
+    with open(
+        f"./{location.lower().replace(' ','_')}/data/external/neighborhood_boundaries.geojson"
+    ) as f:
         geojson = json.load(f)
     return geojson
 
 
-def plot_results(df, geojson, max_dist_transit):
+def plot_results(df, geojson, max_dist_transit, location):
     # Get median for each neighborhood
     nhood_rent = (
         df[df.dist_transit < max_dist_transit]
@@ -34,20 +34,24 @@ def plot_results(df, geojson, max_dist_transit):
         .median()
     )
     nhood_rent.Rent = nhood_rent.Rent.astype(int)
-    nhood_rent = nhood_rent[nhood_rent["neighborhood"].str.strip().astype(bool)]
 
     # Set map center
-    downtown_seattle = {"lat": 47.604013, "lon": -122.335167}
+    map_center = location_centroid[location]
+
+    featureidkey_location = {
+        "Seattle": "properties.S_HOOD",
+        "New York City": "properties.ntaname",
+    }
 
     fig = px.choropleth_mapbox(
         nhood_rent,
         geojson=geojson,
         locations="neighborhood",
-        featureidkey="properties.S_HOOD",
+        featureidkey=featureidkey_location[location],
         color="Rent",
         mapbox_style="carto-positron",
         zoom=10.8,
-        center={"lat": downtown_seattle["lat"], "lon": downtown_seattle["lon"]},
+        center={"lat": map_center["lat"], "lon": map_center["lon"]},
         opacity=0.7,
         hover_name="neighborhood",
     )
@@ -81,31 +85,33 @@ def main():
                     "Rooftop",
                     "Concierge",
                     "Pool",
+                    "Elevator",
+                    "Dishwasher",
                     "Parking Garage",
                     "Pets Allowed",
                 ],
             )
-            submit = st.form_submit_button("Get Predictions")
+            submit = st.form_submit_button("Get Estimated Values")
 
     # Setup data for model
-    location = load_prediction_locations("seattle")
-    geojson = load_geojson("seattle")
-    model = load_model("seattle")
+    prediction_points = load_prediction_points(location)
+    geojson = load_geojson(location)
+    model = load_model(location)
 
     # Get predictions
     predictor = Prediction(
         beds=beds, baths=baths, sqft=np.log(sqft), amenities=amenities
     )
-    predictions = predictor.get_predictions(model, location)
+    predictions = predictor.get_predictions(model, prediction_points, location)
     results = pd.DataFrame(
         {
-            "neighborhood": location.neighborhood,
+            "neighborhood": prediction_points.neighborhood,
             "Rent": predictions,
-            "dist_transit": location.loc[:, "dist_transit"],
+            "dist_transit": prediction_points.loc[:, "dist_transit"],
         }
     )
     # Plot results
-    plot_results(results, geojson, transit_distance)
+    plot_results(results, geojson, transit_distance, location)
 
 
 if __name__ == "__main__":
