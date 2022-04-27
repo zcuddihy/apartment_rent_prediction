@@ -1,6 +1,6 @@
-# Predicting Apartment Rent Prices
+# Predicting Apartment Rental Prices
 
-Nearly 100 million people within 45 million households are active renters. Needless to say, the rental market in the US impacts the lives of so many people. With housing prices in major cities across the country on the rise, the number of people renting, and the longevity that they will have to rent, is only going to increase. 
+Nearly 100 million people within 45 million households are active renters. Since housing prices in major cities across the country on the rise, the number of people renting, and the longevity that they will have to rent, is only going to increase. Needless to say, the rental market in the US impacts the lives of so many people.  
 
 Many useful sites (e.g. Apartments.com or Craigslist) host thousands of active listings every day for prospective renters to filter through. Finding the right apartment, in the right location, can become a challenging and stressful endevour. 
 
