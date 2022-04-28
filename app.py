@@ -65,8 +65,7 @@ def main():
     with st.form(key="Form1"):
         with st.sidebar:
             location = st.selectbox(
-                "Select the location",
-                ("Seattle", "Bay Area", "Chicago", "New York City"),
+                "Select the location", ("Seattle", "New York City"),
             )
             beds = st.number_input("Beds", 0, 3, 1)
             baths = st.number_input("Baths", 0, 3, 1)
