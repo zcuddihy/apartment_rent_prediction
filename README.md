@@ -1,4 +1,4 @@
-# Predicting Apartment Rental Prices
+# Predicting Apartment Rental Prices [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_red.svg)](https://share.streamlit.io/zcuddihy/apartment_rent_prediction/main/app.py)
 
 Finding the perfect apartment is a challenge; searching through endless apartment listings to compare multiple listings is even more challenging. This app is meant to simplify that process and help you identify the right price and location that fits your budget and needs. 
 
